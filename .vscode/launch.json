@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend debuggen",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeArgs": ["--import", "tsx"],
+      "program": "${workspaceFolder}/backend/src/server.ts",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    },
+    {
+      "name": "Frontend im Browser",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5310",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "frontend"
+    },
+    {
+      "name": "Alles starten (npm start) + Browser",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5310",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "start"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Backend debuggen + Frontend",
+      "configurations": ["Backend debuggen", "Frontend im Browser"],
+      "stopAll": true
+    }
+  ]
+}

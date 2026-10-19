@@ -1,0 +1,70 @@
+<aside class="sidebar">
+  <div class="brand">
+    <span class="logo"><app-icon name="home" [size]="18" /></span>
+    <div>
+      <strong>CubePilot</strong>
+      <div class="tagline">for homee</div>
+      <div class="conn" [class.on]="live.status()?.connected">
+        <span class="dot"></span>
+        @if (live.status(); as s) {
+          {{ t(s.connected ? (s.remote ? 'über Cloud' : 'lokal verbunden') : 'getrennt') }}
+        } @else {
+          {{ t('verbinde …') }}
+        }
+      </div>
+    </div>
+  </div>
+
+  <nav>
+    <a routerLink="/geraete" routerLinkActive="active"><app-icon name="sliders" /><span>{{ t('Geräte') }}</span></a>
+    <a routerLink="/homeegramme" routerLinkActive="active"><app-icon name="zap" /><span>{{ t('Homeegramme') }}</span></a>
+    <a routerLink="/protokoll" routerLinkActive="active"><app-icon name="history" /><span>{{ t('Verlauf') }}</span></a>
+    <a routerLink="/sicherungen" routerLinkActive="active"><app-icon name="save" /><span>{{ t('Sicherungen') }}</span></a>
+    @if (live.status()?.allowRaw) {
+      <a routerLink="/konsole" routerLinkActive="active"><app-icon name="terminal" /><span>{{ t('Konsole') }}</span></a>
+    }
+  </nav>
+
+  <div class="foot">
+    @if (live.readOnly()) {
+      <span class="badge warn">{{ t('Nur lesen') }}</span>
+    }
+    @if (live.status()?.version; as v) {
+      <span class="faint small">homee {{ v.split('+')[0] }}</span>
+    }
+    <a class="setup-link" routerLink="/einrichtung" routerLinkActive="active"><app-icon name="pencil" [size]="13" /> {{ t('Einrichtung') }}</a>
+    <button class="ghost small" type="button" (click)="setKey()" [title]="t('API-Schlüssel setzen')"><app-icon name="key" [size]="15" /> {{ t('Schlüssel') }}</button>
+    <div class="segmented lang" role="group" [attr.aria-label]="t('Sprache wechseln')">
+      <button type="button" [class.on]="lang() === 'de'" [attr.aria-pressed]="lang() === 'de'" (click)="setLang('de')">DE</button>
+      <button type="button" [class.on]="lang() === 'en'" [attr.aria-pressed]="lang() === 'en'" (click)="setLang('en')">EN</button>
+    </div>
+  </div>
+</aside>
+
+<div class="content">
+  @if (live.error(); as err) {
+    <div class="banner error">
+      <app-icon name="alert" />
+      <span>{{ t('Backend nicht erreichbar: {error}', { error: err }) }}</span>
+      <button class="secondary small" type="button" (click)="live.start()">{{ t('Erneut versuchen') }}</button>
+    </div>
+  } @else if (live.status() && !live.status()!.connected) {
+    <div class="banner warn">
+      <app-icon name="alert" />
+      <span>{{ live.status()!.lastError ? t('Keine Verbindung zu homee: {error} – es wird automatisch neu verbunden.', { error: live.status()!.lastError! }) : t('Keine Verbindung zu homee – es wird automatisch neu verbunden.') }}</span>
+    </div>
+  }
+
+  <main>
+    <router-outlet />
+  </main>
+</div>
+
+<div class="toasts" aria-live="polite">
+  @for (t of toasts.items(); track t.id) {
+    <button type="button" class="toast" [class.error]="t.kind === 'error'" (click)="toasts.dismiss(t.id)">
+      <app-icon [name]="t.kind === 'error' ? 'alert' : 'check'" />
+      <span>{{ t.text }}</span>
+    </button>
+  }
+</div>

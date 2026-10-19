@@ -1,0 +1,38 @@
+{
+  "name": "cubepilot-for-homee",
+  "private": true,
+  "version": "0.1.0",
+  "description": "CubePilot for homee: homee fernsteuern und Homeegramme per KI bearbeiten: Backend, MCP-Server und Angular-Frontend",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "backend",
+    "mcp",
+    "remote"
+  ],
+  "scripts": {
+    "prestart": "tsx backend/src/setup.ts --if-missing",
+    "start": "concurrently -n backend,frontend -c blue,magenta \"npm run backend\" \"npm run frontend\"",
+    "setup": "npm install && npm install --prefix frontend && npm run configure",
+    "configure": "tsx backend/src/setup.ts",
+    "backend": "npm run dev -w backend",
+    "frontend": "npm start --prefix frontend",
+    "mcp": "npm start -w mcp",
+    "preprobe": "tsx backend/src/setup.ts --if-missing",
+    "probe": "npm run probe -w backend",
+    "build": "npm run build --prefix frontend",
+    "preserve": "tsx backend/src/setup.ts --if-missing",
+    "serve": "npm run build && npm start -w backend",
+    "typecheck": "tsc -p packages/homee-client && tsc -p backend && tsc -p mcp && tsc -p remote",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "stop": "node scripts/stop-backend.mjs"
+  },
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "concurrently": "^10.0.6"
+  },
+  "license": "MIT"
+}

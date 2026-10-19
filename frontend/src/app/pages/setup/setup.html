@@ -1,0 +1,80 @@
+<div class="page-head"><h1>{{ t('Einrichtung') }}</h1></div>
+<p class="muted small">
+  {{ t('Zugangsdaten, mit denen sich dieses Tool bei homee anmeldet. Sie werden in der .env gespeichert; danach verbindet sich das Backend sofort neu.') }}
+</p>
+
+<form class="card" (submit)="$event.preventDefault(); save()">
+  <div class="hint">
+    <app-icon name="info" [size]="16" />
+    <span>
+      {{ t('Empfehlung: Lege für dieses Tool einen eigenen homee-Benutzer an (homee-App → Einstellungen → Benutzer) statt den Admin-Zugang zu verwenden. So siehst du, was das Tool geändert hat, kannst ihm den Zugriff jederzeit entziehen, und dein Admin-Passwort liegt nicht im Klartext in der .env. Der Admin-Zugang funktioniert aber auch.') }}
+      @if (isAdmin()) {
+        <strong>{{ t('Aktuell ist ein Admin-Benutzer eingetragen.') }}</strong>
+      }
+    </span>
+  </div>
+
+  <div class="field">
+    <span>{{ t('Verbindung') }}</span>
+    <div class="segmented" role="group">
+      <button type="button" [class.on]="form().mode === 'local'" (click)="set('mode', 'local')">{{ t('Lokal (IP-Adresse)') }}</button>
+      <button type="button" [class.on]="form().mode === 'remote'" (click)="set('mode', 'remote')">{{ t('homee-Cloud (homee-ID)') }}</button>
+    </div>
+  </div>
+
+  @if (form().mode === 'local') {
+    <label class="field">
+      <span>{{ t('IP-Adresse des homee') }}</span>
+      <input [value]="form().ip" (input)="set('ip', $any($event.target).value)" placeholder="192.168.1.50" spellcheck="false" />
+    </label>
+  } @else {
+    <label class="field">
+      <span>{{ t('homee-ID') }} <span class="faint">{{ t('(12 Zeichen, homee-App → Einstellungen → homee)') }}</span></span>
+      <input [value]="form().homeeId" (input)="set('homeeId', $any($event.target).value)" spellcheck="false" />
+    </label>
+  }
+
+  <div class="field-row">
+    <label class="field">
+      <span>{{ t('Benutzername') }}</span>
+      <input [value]="form().user" (input)="set('user', $any($event.target).value)" autocomplete="username" spellcheck="false" />
+    </label>
+    <label class="field">
+      <span>{{ t('Passwort') }}</span>
+      <input
+        type="password"
+        [value]="form().password"
+        (input)="set('password', $any($event.target).value)"
+        [placeholder]="hasPassword() ? t('unverändert') : ''"
+        autocomplete="current-password"
+      />
+    </label>
+  </div>
+
+  @if (result(); as r) {
+    @if (r.ok) {
+      <div class="result ok">
+        <app-icon name="check" [size]="16" />
+        <span>
+          {{ t('Verbunden mit „{name}“, Version {version}, {nodes} Geräte.', { name: r.homeeName ?? 'homee', version: r.version ?? '?', nodes: r.nodes ?? 0 }) }}
+          @if (r.isAdmin) {
+            <br /><span class="muted">{{ t('Hinweis: Das ist ein Admin-Benutzer. Das funktioniert, empfohlen ist aber ein eigener Benutzer.') }}</span>
+          }
+        </span>
+      </div>
+    } @else {
+      <div class="result fail">
+        <app-icon name="alert" [size]="16" />
+        <span>{{ r.error }}</span>
+      </div>
+    }
+  }
+
+  <div class="actions">
+    <button type="submit" [disabled]="busy()">{{ busy() ? t('Moment …') : t('Speichern und neu verbinden') }}</button>
+    <button class="secondary" type="button" (click)="test()" [disabled]="busy()">{{ t('Nur testen') }}</button>
+    @if (result() && !result()!.ok) {
+      <button class="ghost" type="button" (click)="save(true)" [disabled]="busy()">{{ t('Trotzdem speichern') }}</button>
+    }
+  </div>
+</form>

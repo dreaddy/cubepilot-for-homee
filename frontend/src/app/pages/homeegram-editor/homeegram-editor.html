@@ -1,0 +1,176 @@
+<a routerLink="/homeegramme" class="back"><app-icon name="chevron-left" [size]="16" /> {{ t('Homeegramme') }}</a>
+
+@if (error(); as e) {
+  <div class="card error-box"><app-icon name="alert" /> {{ e }}</div>
+}
+
+@if (draft(); as d) {
+  <header class="head">
+    <div class="title">
+      <input
+        #nameInput
+        class="name"
+        type="text"
+        [placeholder]="t('Name des Homeegramms')"
+        [value]="d.name"
+        (input)="setName($any($event.target).value)"
+        [disabled]="live.readOnly()"
+        [attr.aria-label]="t('Name')"
+      />
+      <div class="meta faint small">
+        @if (isNew()) {
+          {{ t('Neues Homeegramm') }}
+        } @else {
+          #{{ d.id }}
+          @if (view(); as v) { · {{ t('zuletzt ausgeführt {when}', { when: relativeTime(v.lastTriggered) }) }} }
+        }
+      </div>
+    </div>
+
+    <label class="active">
+      <input class="switch" type="checkbox" [checked]="d.active" (change)="setActive($any($event.target).checked)" [disabled]="live.readOnly()" />
+      <span>{{ d.active ? t('Aktiv') : t('Inaktiv') }}</span>
+    </label>
+
+    @if (!isNew()) {
+      <button type="button" class="secondary" (click)="play()" [disabled]="live.readOnly()" [title]="dirty() ? t('Führt die gespeicherte Version aus') : t('Jetzt ausführen')">
+        <app-icon name="play" [size]="15" /> {{ t('Ausführen') }}
+      </button>
+      <div class="menu-wrap">
+        <button type="button" class="ghost icon" (click)="menuOpen.set(!menuOpen())" [attr.aria-label]="t('Weitere Aktionen')"><app-icon name="more" /></button>
+        @if (menuOpen()) {
+          <div class="menu card" role="menu">
+            <button type="button" class="ghost" (click)="menuOpen.set(false); play(true)" [disabled]="live.readOnly()"><app-icon name="flask" [size]="16" /> {{ t('Testlauf') }}</button>
+            <button type="button" class="ghost" (click)="duplicate()" [disabled]="live.readOnly()"><app-icon name="copy" [size]="16" /> {{ t('Duplizieren') }}</button>
+            <button type="button" class="ghost" (click)="toggleRaw()"><app-icon name="code" [size]="16" /> {{ raw() ? t('Rohdaten ausblenden') : t('Rohdaten anzeigen') }}</button>
+            <hr />
+            <button type="button" class="ghost danger-text" (click)="deleteHomeegram()" [disabled]="live.readOnly()"><app-icon name="trash" [size]="16" /> {{ t('Löschen') }}</button>
+          </div>
+        }
+      </div>
+    }
+  </header>
+
+  <div class="flow">
+    @for (kind of kinds; track kind; let last = $last) {
+      <section class="block" [attr.data-kind]="kind">
+        <div class="block-head">
+          <span class="tag">{{ t(KIND_META[kind].title) }}</span>
+          <span class="faint small">{{ t(KIND_META[kind].subtitle) }}</span>
+        </div>
+
+        <div class="items">
+          @for (item of items(kind); track item.key; let i = $index) {
+            @let state = itemState(item);
+            @let def = defFor(item.group);
+            <div class="item card" [class.open]="expanded() === item.key" [class.removed]="state === 'removed'" [class.invalid]="errors().has(item.key)">
+              <div class="item-head">
+                <button type="button" class="item-toggle" (click)="state !== 'removed' && toggle(item)" [disabled]="state === 'removed'">
+                  <span class="item-icon"><app-icon [name]="def?.icon ?? 'box'" [size]="17" /></span>
+                  <span class="item-text">
+                    <span class="item-type faint small">{{ def ? t(def.label) : item.group }}</span>
+                    <span class="item-desc">{{ describe(item) }}</span>
+                  </span>
+                </button>
+                @switch (state) {
+                  @case ('new') { <span class="badge accent">{{ t('neu') }}</span> }
+                  @case ('changed') { <span class="badge warn">{{ t('geändert') }}</span> }
+                  @case ('removed') { <span class="badge danger">{{ t('wird entfernt') }}</span> }
+                }
+                @if (state === 'removed') {
+                  <button type="button" class="ghost small" (click)="restore(item)"><app-icon name="undo" [size]="14" /> {{ t('Rückgängig') }}</button>
+                } @else {
+                  @if (errors().get(item.key); as err) {
+                    <span class="err small" [title]="err"><app-icon name="alert" [size]="15" /></span>
+                  }
+                  <button type="button" class="ghost icon small" (click)="remove(item)" [disabled]="live.readOnly()" [attr.aria-label]="t('Entfernen')" [title]="t('Entfernen')"><app-icon name="trash" [size]="15" /></button>
+                  <button type="button" class="ghost small chev" (click)="toggle(item)" [attr.aria-expanded]="expanded() === item.key">
+                    @if (expanded() === item.key) {
+                      <app-icon name="chevron-down" [size]="16" /> {{ t('Zuklappen') }}
+                    } @else {
+                      <app-icon name="pencil" [size]="14" /> {{ t('Bearbeiten') }}
+                    }
+                  </button>
+                }
+              </div>
+
+              @if (expanded() === item.key && state !== 'removed') {
+                <div class="item-body">
+                  @if (errors().get(item.key); as err) {
+                    <div class="err-line small"><app-icon name="alert" [size]="14" /> {{ err }}</div>
+                  }
+                  <app-item-editor
+                    [item]="item"
+                    [homeegramId]="d.id"
+                    [disabled]="live.readOnly()"
+                    (patch)="patchItem(item, $event)"
+                    (replace)="replaceItem(item, $event)"
+                  />
+                  <div class="item-foot">
+                    <button type="button" class="secondary small" (click)="expanded.set(null)"><app-icon name="check" [size]="14" /> {{ t('Fertig') }}</button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @empty {
+            <p class="empty-kind faint small">{{ t(KIND_META[kind].empty) }}</p>
+          }
+
+          @if (!live.readOnly()) {
+            @if (adding() === kind) {
+              <div class="picker card">
+                <div class="picker-head">
+                  <strong>{{ t('{what} hinzufügen', { what: t(KIND_META[kind].add) }) }}</strong>
+                  <button type="button" class="ghost icon small" (click)="adding.set(null)" [attr.aria-label]="t('Abbrechen')"><app-icon name="x" [size]="16" /></button>
+                </div>
+                <div class="picker-grid">
+                  @for (def of addable(); track def.group) {
+                    <button type="button" class="pick" (click)="add(def)">
+                      <span class="item-icon"><app-icon [name]="def.icon" [size]="18" /></span>
+                      <span>
+                        <strong>{{ t(def.label) }}</strong>
+                        <span class="faint small">{{ t(def.hint) }}</span>
+                      </span>
+                    </button>
+                  }
+                </div>
+              </div>
+            } @else {
+              <button type="button" class="add" (click)="adding.set(kind)"><app-icon name="plus" [size]="16" /> {{ t(KIND_META[kind].add) }}</button>
+            }
+          }
+        </div>
+      </section>
+      @if (!last) {
+        <div class="connector"><app-icon name="arrow-down" [size]="16" /></div>
+      }
+    }
+  </div>
+
+  @if (raw()) {
+    <h2 class="raw-title">{{ t('Rohdaten') }}</h2>
+    <pre>{{ raw() | json }}</pre>
+  }
+
+  @if (dirty() || isNew()) {
+    <div class="savebar card">
+      <span class="grow">
+        @if (errors().size) {
+          <span class="err"><app-icon name="alert" [size]="15" /> {{ errors().size === 1 ? t('1 Eintrag ist unvollständig') : t('{n} Einträge sind unvollständig', { n: errors().size }) }}</span>
+        } @else if (!d.name.trim()) {
+          <span class="err"><app-icon name="alert" [size]="15" /> {{ t('Bitte einen Namen vergeben') }}</span>
+        } @else if (isNew()) {
+          {{ t('Neues Homeegramm') }}
+        } @else {
+          {{ changes() === 1 ? t('1 ungespeicherte Änderung') : t('{n} ungespeicherte Änderungen', { n: changes() }) }}
+        }
+      </span>
+      <button type="button" class="ghost" (click)="discard()" [disabled]="saving()">{{ isNew() ? t('Abbrechen') : t('Verwerfen') }}</button>
+      <button type="button" (click)="save()" [disabled]="!canSave()" [title]="t('Speichern (Strg+S)')">
+        <app-icon name="save" [size]="16" /> {{ saving() ? t('Speichere …') : isNew() ? t('Anlegen') : t('Speichern') }}
+      </button>
+    </div>
+  }
+} @else if (!error()) {
+  <div class="empty">{{ t('Lade …') }}</div>
+}

@@ -1,0 +1,167 @@
+:host {
+  display: block;
+  max-width: 920px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 550;
+  margin-bottom: 14px;
+}
+
+.intro {
+  margin: -6px 0 18px;
+}
+
+.pairs {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+
+  .field {
+    flex: 1;
+  }
+
+  select {
+    width: 100%;
+  }
+
+  .arrow {
+    color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+
+  button {
+    margin-bottom: 4px;
+  }
+}
+
+.pair-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 0;
+
+  &.warn {
+    color: var(--warn);
+  }
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.section {
+  margin: 26px 0 10px;
+}
+
+.warning {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: transparent;
+}
+
+.block {
+  padding: 14px 16px;
+  margin-bottom: 12px;
+
+  h3 {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+  }
+}
+
+.hg {
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+
+  ul {
+    margin: 6px 0 0;
+    padding-left: 4px;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.88rem;
+  }
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.result {
+  margin-top: 20px;
+  padding: 14px 16px;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+  }
+
+  .err {
+    color: var(--danger);
+  }
+}
+
+@media (max-width: 760px) {
+  .pair {
+    flex-wrap: wrap;
+
+    .field {
+      flex: 1 1 100%;
+    }
+
+    .arrow {
+      display: none;
+    }
+  }
+}

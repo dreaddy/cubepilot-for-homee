@@ -1,0 +1,39 @@
+# Abhängigkeiten & Build
+node_modules/
+dist/
+out-tsc/
+.angular/
+*.tsbuildinfo
+
+# Zugangsdaten & lokale Konfiguration – niemals einchecken
+.env
+.env.*
+!.env.example
+
+# Laufzeitdaten: Sicherungen, Änderungsprotokoll, Logs, PID (enthalten Daten des eigenen homee)
+data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor & System
+.idea/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.claude/
+.codex/
+.agents/
+.mcp.local.json
+*.local
+*.bak
+*.tmp
+*.swp
+*.swo
+*.pem
+*.key
+.DS_Store
+Thumbs.db
+coverage/

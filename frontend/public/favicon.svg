@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>CubePilot for homee</title>
+  <rect width="64" height="64" rx="16" fill="#172b35"/>
+  <path d="m32 12 19 11v22L32 56 13 45V23Z" fill="#36bfa6"/>
+  <path d="m13 23 19 11 19-11M32 34v22M32 12 13 23" fill="none" stroke="#e8fff9" stroke-width="3" stroke-linejoin="round"/>
+</svg>

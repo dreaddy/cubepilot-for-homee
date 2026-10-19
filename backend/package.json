@@ -1,0 +1,20 @@
+{
+  "name": "@cubepilot/backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "probe": "tsx src/probe.ts"
+  },
+  "dependencies": {
+    "@fastify/static": "^10.1.6",
+    "@cubepilot/client": "*",
+    "fastify": "^5.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0"
+  }
+}

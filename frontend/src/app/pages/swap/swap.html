@@ -1,0 +1,115 @@
+<a routerLink="/geraete" class="back"><app-icon name="chevron-left" [size]="16" /> {{ t('Geräte') }}</a>
+
+<div class="page-head">
+  <h1>{{ t('Gerät tauschen') }}</h1>
+</div>
+<p class="muted intro">
+  {{ t('Ersetzt ein altes Gerät in allen Homeegrammen durch ein neues – z. B. nach einem neuen Schloss, einem neuen Sensor oder wenn nach einem Router-Wechsel alle Heizkörper neu angelernt wurden. Mehrere Geräte lassen sich in einem Schritt tauschen.') }}
+</p>
+
+<div class="card pairs">
+  @for (row of rows(); track $index; let i = $index) {
+    <div class="pair">
+      <label class="field">
+        <span>{{ t('Altes Gerät') }}</span>
+        <select [value]="row.from ?? ''" (change)="setRow(i, { from: +$any($event.target).value || null, to: null })">
+          <option value="">{{ t('wählen …') }}</option>
+          @for (n of devices(); track n.id) {
+            <option [value]="n.id" [selected]="n.id === row.from">{{ n.name }} — {{ usageText(n.id) }}{{ n.state !== 'Available' ? ' · ' + t('nicht erreichbar') : '' }}</option>
+          }
+        </select>
+      </label>
+      <app-icon class="arrow" name="chevron-right" [size]="18" />
+      <label class="field">
+        <span>{{ t('Neues Gerät') }}</span>
+        <select [value]="row.to ?? ''" [disabled]="!row.from" (change)="setRow(i, { to: +$any($event.target).value || null })">
+          <option value="">{{ t('wählen …') }}</option>
+          @for (c of candidates(row); track c.node.id) {
+            <option [value]="c.node.id" [selected]="c.node.id === row.to">{{ c.suggested ? '★ ' : '' }}{{ c.node.name }} ({{ category(c.node) }}, #{{ c.node.id }}) — {{ usageText(c.node.id) }}</option>
+          }
+        </select>
+      </label>
+      <button type="button" class="ghost icon small" (click)="removeRow(i)" [attr.aria-label]="t('Entfernen')" [title]="t('Entfernen')"><app-icon name="x" [size]="16" /></button>
+    </div>
+    @if (node(row.from); as f) {
+      @if (node(row.to); as n) {
+        @if (f.profile !== n.profile) {
+          <p class="hint warn small"><app-icon name="alert" [size]="14" /> {{ t('Unterschiedliche Gerätetypen ({a} / {b}) – die Vorschau zeigt, was zugeordnet werden kann.', { a: f.profileName, b: n.profileName }) }}</p>
+        }
+      }
+    }
+  }
+  <div class="pair-foot">
+    <button type="button" class="ghost small" (click)="addRow()"><app-icon name="plus" [size]="14" /> {{ t('Weiteres Gerät') }}</button>
+    <span class="faint small">{{ t('★ = gleicher Gerätetyp und noch nirgends verwendet') }}</span>
+  </div>
+
+  <div class="options">
+    <label class="check"><input type="checkbox" [checked]="groups()" (change)="setOption('groups', $any($event.target).checked)" /> {{ t('Gruppen übernehmen (z. B. „Heizungen“)') }}</label>
+    <label class="check"><input type="checkbox" [checked]="rename()" (change)="setOption('rename', $any($event.target).checked)" /> {{ t('Namen übernehmen – das neue Gerät heißt wie das alte, das alte bekommt „(alt)“') }}</label>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="secondary" (click)="preview()" [disabled]="!ready() || busy()"><app-icon name="search" [size]="15" /> {{ t('Vorschau') }}</button>
+    @if (plan()) {
+      <button type="button" (click)="apply()" [disabled]="busy() || live.readOnly() || !totalChanges()"><app-icon name="refresh" [size]="15" /> {{ t('Jetzt tauschen') }} ({{ totalChanges() }})</button>
+    }
+  </div>
+</div>
+
+@if (plan(); as p) {
+  <h2 class="section">{{ t('Vorschau') }}</h2>
+  @for (w of p.warnings; track $index) {
+    <div class="card warning small"><app-icon name="alert" [size]="15" /> {{ w }}</div>
+  }
+  @if (!totalChanges()) {
+    <div class="empty">{{ t('Nichts zu tun – das alte Gerät wird nirgends verwendet.') }}</div>
+  }
+  @if (p.homeegrams.length) {
+    <div class="card block">
+      <h3>{{ t('Homeegramme') }} ({{ p.homeegrams.length }})</h3>
+      @for (h of p.homeegrams; track h.id) {
+        <div class="hg">
+          <a [routerLink]="['/homeegramme', h.id]">{{ h.name }}</a>
+          <ul>
+            @for (c of h.changes; track c.itemId) {
+              <li><span class="badge">{{ c.kind === 'triggers' ? t('Auslöser') : c.kind === 'conditions' ? t('Bedingung') : t('Aktion') }}</span> {{ c.after }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  }
+  @if (p.groups.length) {
+    <div class="card block">
+      <h3>{{ t('Gruppen') }} ({{ p.groups.length }})</h3>
+      @for (g of p.groups; track g.groupId) {
+        <div class="line">
+          <strong>{{ g.name }}</strong>
+          @for (id of g.add; track id) { <span class="badge ok">+ {{ nodeName(id) }}</span> }
+          @for (r of g.removeRelationships; track r.id) { <span class="badge danger">− {{ nodeName(r.nodeId) }}</span> }
+        </div>
+      }
+    </div>
+  }
+  @if (p.renames.length) {
+    <div class="card block">
+      <h3>{{ t('Namen') }}</h3>
+      @for (r of p.renames; track r.nodeId) {
+        <div class="line">„{{ r.from }}“ <app-icon name="chevron-right" [size]="14" /> „{{ r.to }}“</div>
+      }
+    </div>
+  }
+}
+
+@if (done(); as d) {
+  <div class="card result">
+    <h3><app-icon [name]="d.errors.length ? 'alert' : 'check'" /> {{ d.errors.length ? t('Mit Fehlern abgeschlossen') : t('Tausch abgeschlossen') }}</h3>
+    <p class="small">
+      {{ t('{h} Homeegramm(e), {g} Gruppe(n), {r} Umbenennung(en).', { h: d.plan.homeegrams.length, g: d.plan.groups.length, r: d.plan.renames.length }) }}
+      {{ t('Eine Sicherung des vorherigen Stands liegt unter') }} <a routerLink="/sicherungen">{{ t('Sicherungen') }}</a>.
+    </p>
+    @for (e of d.errors; track $index) { <p class="small err">{{ e }}</p> }
+    <button type="button" class="secondary small" (click)="reset()">{{ t('Weiteres Gerät tauschen') }}</button>
+  </div>
+}

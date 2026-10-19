@@ -1,0 +1,113 @@
+<div class="page-head">
+  <h1>{{ t('Geräte') }}</h1>
+  <a class="btn ghost small" routerLink="/geraete/tauschen"><app-icon name="refresh" [size]="15" /> {{ t('Gerät tauschen') }}</a>
+  <button class="ghost small" type="button" (click)="live.load()" [disabled]="live.loading()"><app-icon name="refresh" [size]="15" /> {{ t('Aktualisieren') }}</button>
+</div>
+
+<div class="toolbar">
+  <label class="search">
+    <app-icon name="search" [size]="16" />
+    <input type="search" [placeholder]="t('Gerät suchen …')" [value]="search()" (input)="search.set($any($event.target).value)" />
+  </label>
+</div>
+<div class="chips">
+  <button type="button" class="chip" [class.on]="category() === 'all'" (click)="category.set('all')">{{ t('Alle') }} <span class="count">{{ live.nodes().length }}</span></button>
+  @for (c of categories(); track c.key) {
+    <button type="button" class="chip" [class.on]="category() === c.key" (click)="category.set(c.key)">
+      <app-icon [name]="c.icon" [size]="15" /> {{ t(c.name) }} <span class="count">{{ c.count }}</span>
+    </button>
+  }
+</div>
+
+@for (s of sections(); track s.key) {
+  <section>
+    @if (category() === 'all') {
+      <h2 class="section-title"><app-icon [name]="s.icon" [size]="17" /> {{ t(s.name) }}</h2>
+    }
+    <div class="grid">
+      @for (n of s.nodes; track n.id) {
+        <article class="card device" [class.offline]="offline(n)" [class.on]="isOn(n)" [attr.data-kind]="kind(n)">
+          <header>
+            <span class="bubble"><app-icon [name]="icon(n)" [size]="20" /></span>
+            <button type="button" class="title" (click)="selected.set(n)" [title]="t('Details')">
+              <strong>{{ n.name }}</strong>
+              <span class="status" [class.pending]="isPending(n)">{{ status(n) }}</span>
+            </button>
+
+            @switch (kind(n)) {
+              @case ('light') {
+                <input class="switch" type="checkbox" [checked]="attr(n, 'OnOff')!.target === 1" [disabled]="offline(n) || busy().has(attr(n, 'OnOff')!.id)" (change)="set(attr(n, 'OnOff'), $any($event.target).checked ? 1 : 0)" [attr.aria-label]="t('Ein/Aus')" />
+              }
+              @case ('plug') {
+                <input class="switch" type="checkbox" [checked]="attr(n, 'OnOff')!.target === 1" [disabled]="offline(n) || busy().has(attr(n, 'OnOff')!.id)" (change)="set(attr(n, 'OnOff'), $any($event.target).checked ? 1 : 0)" [attr.aria-label]="t('Ein/Aus')" />
+              }
+              @case ('lock') {
+                <button type="button" class="secondary small" [disabled]="offline(n)" (click)="toggleLock(attr(n, 'LockState')!)">
+                  <app-icon [name]="attr(n, 'LockState')!.value === 1 ? 'unlock' : 'lock'" [size]="15" />
+                  {{ attr(n, 'LockState')!.value === 1 ? t('Entriegeln') : t('Verriegeln') }}
+                </button>
+              }
+            }
+            <button type="button" class="ghost icon small info" (click)="selected.set(n)" [title]="t('Details & Einstellungen')" [attr.aria-label]="t('Details')"><app-icon name="info" [size]="17" /></button>
+          </header>
+
+          @switch (kind(n)) {
+            @case ('shutter') {
+              @let p = attr(n, 'Position')!;
+              <div class="shutter">
+                <div class="segmented">
+                  <button type="button" [disabled]="offline(n)" (click)="set(p, 0)" [title]="t('Öffnen')"><app-icon name="arrow-up" [size]="16" /> {{ t('Auf') }}</button>
+                  @if (attr(n, 'UpDown')?.editable) {
+                    <button type="button" [disabled]="offline(n)" (click)="set(attr(n, 'UpDown'), 2)" [title]="t('Stopp')"><app-icon name="stop" [size]="14" /></button>
+                  }
+                  <button type="button" [disabled]="offline(n)" (click)="set(p, 100)" [title]="t('Schließen')"><app-icon name="arrow-down" [size]="16" /> {{ t('Zu') }}</button>
+                </div>
+                <div class="range-row">
+                  <input type="range" min="0" max="100" step="1" [value]="shownValue(p)" [disabled]="offline(n)" (input)="drag(p, $any($event.target).value)" (change)="set(p, $any($event.target).value)" [attr.aria-label]="t('Position')" />
+                  <span class="num">{{ shownValue(p) }} %</span>
+                </div>
+              </div>
+            }
+            @case ('light') {
+              @if (attr(n, 'DimmingLevel'); as d) {
+                <div class="range-row">
+                  <app-icon name="sun" [size]="15" />
+                  <input type="range" [min]="d.min" [max]="d.max" [step]="d.step || 1" [value]="shownValue(d)" [disabled]="offline(n)" (input)="drag(d, $any($event.target).value)" (change)="set(d, $any($event.target).value)" [attr.aria-label]="t('Helligkeit')" />
+                  <span class="num">{{ shownValue(d) }} %</span>
+                </div>
+              }
+            }
+            @case ('heating') {
+              @let target = attr(n, 'TargetTemperature')!;
+              <div class="thermo">
+                <div>
+                  <div class="faint small">{{ t('Soll') }}</div>
+                  <div class="big">{{ formatValue(target, target.target) }}</div>
+                </div>
+                <div class="stepper">
+                  <button type="button" class="secondary icon" [disabled]="offline(n) || target.target <= target.min" (click)="step(target, -1)" [attr.aria-label]="t('Kälter')"><app-icon name="minus" /></button>
+                  <button type="button" class="secondary icon" [disabled]="offline(n) || target.target >= target.max" (click)="step(target, 1)" [attr.aria-label]="t('Wärmer')"><app-icon name="plus" /></button>
+                </div>
+              </div>
+            }
+            @case ('info') {
+              @if (readings(n).length) {
+                <dl class="readings">
+                  @for (a of readings(n); track a.id) {
+                    <div><dt>{{ attributeLabel(a) }}</dt><dd>{{ formatValue(a, a.value) }}</dd></div>
+                  }
+                </dl>
+              }
+            }
+          }
+        </article>
+      }
+    </div>
+  </section>
+} @empty {
+  <div class="empty">{{ live.loaded() ? t('Keine Geräte gefunden.') : t('Lade Geräte …') }}</div>
+}
+
+@if (selected(); as n) {
+  <app-device-dialog [nodeId]="n.id" (closed)="selected.set(null)" />
+}

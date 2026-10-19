@@ -1,0 +1,313 @@
+@let data = d();
+<fieldset [disabled]="disabled()">
+  @switch (def()?.editor) {
+    <!-- ------------------------------------------------ Manuell -->
+    @case ('switch') {
+      <p class="hint"><app-icon name="info" [size]="15" /> {{ t('Startet nur, wenn das Homeegramm abgespielt wird – in der homee-App, hier oder per KI.') }}</p>
+    }
+
+    <!-- ------------------------------------------------ Zeitplan -->
+    @case ('time') {
+      @let s = schedule();
+      <div class="segmented wide">
+        <button type="button" [class.on]="s.mode === 'daily'" (click)="setSchedule({ mode: 'daily' })">{{ t('Täglich') }}</button>
+        <button type="button" [class.on]="s.mode === 'weekly'" (click)="setSchedule({ mode: 'weekly' })">{{ t('Wochentage') }}</button>
+        <button type="button" [class.on]="s.mode === 'interval'" (click)="setSchedule({ mode: 'interval' })">{{ t('Intervall') }}</button>
+        <button type="button" [class.on]="s.mode === 'once'" (click)="setSchedule({ mode: 'once' })">{{ t('Einmalig') }}</button>
+        <button type="button" [class.on]="s.mode === 'advanced'" (click)="setSchedule({ mode: 'advanced' })">{{ t('Erweitert') }}</button>
+      </div>
+
+      @if (s.mode === 'weekly') {
+        <div class="days">
+          @for (w of WEEKDAYS; track w.code) {
+            <button type="button" class="day" [class.on]="s.days.includes(w.code)" (click)="toggleDay(w.code)">{{ t(w.label) }}</button>
+          }
+        </div>
+      }
+
+      <div class="field-row">
+        @if (s.mode === 'interval') {
+          <label class="field">
+            <span>{{ t('Alle') }}</span>
+            <input type="number" min="1" [value]="s.interval" (change)="setSchedule({ interval: num($any($event.target).value) })" />
+          </label>
+          <label class="field">
+            <span>{{ t('Einheit') }}</span>
+            <select [value]="s.intervalUnit" (change)="setSchedule({ intervalUnit: $any($event.target).value })">
+              <option value="MINUTELY">{{ t('Minuten') }}</option>
+              <option value="HOURLY">{{ t('Stunden') }}</option>
+            </select>
+          </label>
+        } @else {
+          @if (s.mode === 'once') {
+            <label class="field">
+              <span>{{ t('Datum') }}</span>
+              <input type="date" [value]="s.date" (change)="setSchedule({ date: $any($event.target).value })" />
+            </label>
+          }
+          <label class="field">
+            <span>{{ t('Uhrzeit') }}</span>
+            <input type="time" [value]="s.time" (change)="setSchedule({ time: $any($event.target).value })" />
+          </label>
+          @if (s.mode === 'advanced') {
+            <label class="field wide">
+              <span>{{ t('RRULE (Uhrzeiten in UTC)') }}</span>
+              <input type="text" [value]="s.rrule" (change)="setSchedule({ rrule: $any($event.target).value })" spellcheck="false" />
+            </label>
+          }
+        }
+      </div>
+      @if (s.mode !== 'interval' && s.mode !== 'advanced') {
+        <p class="hint small"><app-icon name="info" [size]="14" /> {{ t('Ortszeit – wird für homee automatisch in UTC umgerechnet.') }}</p>
+      }
+    }
+
+    <!-- ------------------------------------------------ Gerätewert -->
+    @case ('attribute') {
+      <div class="field-row">
+        <label class="field">
+          <span>{{ t('Gerät') }}</span>
+          <select [value]="data['node_id'] ?? ''" (change)="selectNode($any($event.target).value)">
+            <option value="" disabled>{{ t('Gerät wählen …') }}</option>
+            @for (g of deviceGroups(); track g.name) {
+              <optgroup [label]="g.name">
+                @for (n of g.nodes; track n.id) {
+                  <option [value]="n.id" [selected]="n.id === data['node_id']">{{ nodeLabel(n) }}</option>
+                }
+              </optgroup>
+            }
+          </select>
+        </label>
+        <label class="field">
+          <span>{{ t('Funktion') }}</span>
+          <select [value]="data['attribute_id'] ?? ''" [disabled]="!node()" (change)="selectAttribute($any($event.target).value)">
+            <option value="" disabled>{{ t('wählen …') }}</option>
+            @for (a of attributes(); track a.id) {
+              <option [value]="a.id" [selected]="a.id === data['attribute_id']">{{ attributeLabel(a) }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      @if (attribute(); as a) {
+        @if (kind() === 'actions') {
+          @if (isBinary()) {
+            <div class="segmented">
+              <button type="button" [class.on]="data['command'] !== 3" (click)="patch.emit({ command: 1 })">{{ t('Setzen') }}</button>
+              <button type="button" [class.on]="data['command'] === 3" (click)="patch.emit({ command: 3 })">{{ t('Umschalten') }}</button>
+            </div>
+          }
+          @if (data['command'] !== 3) {
+            <div class="field">
+              <span>{{ t('Setzen auf') }}</span>
+              <app-value-input [meta]="a" [value]="data['value']" (valueChange)="patch.emit({ value: $event })" />
+            </div>
+          }
+        } @else {
+          <div class="field-row">
+            <label class="field op">
+              <span>{{ t('Wenn der Wert') }}</span>
+              <select [value]="data['operator']" (change)="patch.emit({ operator: num($any($event.target).value) })">
+                @for (o of kind() === 'triggers' ? TRIGGER_OPERATORS : CONDITION_OPERATORS; track o.value) {
+                  <option [value]="o.value" [selected]="o.value === data['operator']">{{ t(o.label) }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <span>{{ t('Wert') }} <span class="faint">({{ t('aktuell: {v}', { v: a.value + (a.unit && a.unit !== 'n/a' ? ' ' + a.unit : '') }) }})</span></span>
+            <app-value-input [meta]="a" [value]="data['value']" (valueChange)="patch.emit({ value: $event })" />
+          </div>
+        }
+      }
+    }
+
+    <!-- ------------------------------------------------ Gruppe -->
+    @case ('group') {
+      <div class="field-row">
+        <label class="field">
+          <span>{{ t('Gruppe') }}</span>
+          <select [value]="data['group_id'] ?? ''" (change)="selectGroup($any($event.target).value)">
+            <option value="" disabled>{{ t('Gruppe wählen …') }}</option>
+            @for (g of groups(); track g.id) {
+              <option [value]="g.id" [selected]="g.id === data['group_id']">{{ g.name }} ({{ g.nodeIds.length }})</option>
+            }
+          </select>
+        </label>
+        <label class="field">
+          <span>{{ t('Funktion') }}</span>
+          <select [value]="data['attribute_type'] ?? ''" [disabled]="!groupTypes().length" (change)="patch.emit({ attribute_type: num($any($event.target).value) })">
+            <option value="" disabled>{{ t('wählen …') }}</option>
+            @for (gt of groupTypes(); track gt.type) {
+              <option [value]="gt.type" [selected]="gt.type === data['attribute_type']">{{ typeLabel(gt.typeName) }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      @if (groupType()) {
+        @if (kind() !== 'actions') {
+          <label class="field op">
+            <span>{{ t('Wenn der Wert') }}</span>
+            <select [value]="data['operator']" (change)="patch.emit({ operator: num($any($event.target).value) })">
+              @for (o of kind() === 'triggers' ? TRIGGER_OPERATORS : CONDITION_OPERATORS; track o.value) {
+                <option [value]="o.value" [selected]="o.value === data['operator']">{{ t(o.label) }}</option>
+              }
+            </select>
+          </label>
+        }
+        <div class="field">
+          <span>{{ kind() === 'actions' ? t('Setzen auf') : t('Wert') }}</span>
+          <app-value-input [meta]="groupMeta()" [value]="data['value']" (valueChange)="patch.emit({ value: $event })" />
+        </div>
+      }
+    }
+
+    <!-- ------------------------------------------------ Sonnenstand -->
+    @case ('celestial') {
+      <div class="segmented">
+        <button type="button" [class.on]="data['celestial_type'] === 1" (click)="patch.emit({ celestial_type: 1 })"><app-icon name="sun" [size]="15" /> {{ t('Sonnenaufgang') }}</button>
+        <button type="button" [class.on]="data['celestial_type'] !== 1" (click)="patch.emit({ celestial_type: 2 })"><app-icon name="sunset" [size]="15" /> {{ t('Sonnenuntergang') }}</button>
+      </div>
+      <div class="field-row">
+        <label class="field">
+          <span>{{ t('Versatz') }}</span>
+          <div class="input-unit">
+            <input type="number" min="0" [value]="offsetAbs()" (change)="setOffset($any($event.target).value, offsetSign())" />
+            <span>{{ t('Minuten') }}</span>
+          </div>
+        </label>
+        <label class="field">
+          <span>&nbsp;</span>
+          <select [value]="offsetSign()" (change)="setOffset(offsetAbs(), num($any($event.target).value))">
+            <option [value]="-1" [selected]="offsetSign() === -1">{{ t('vorher') }}</option>
+            <option [value]="1" [selected]="offsetSign() === 1">{{ t('danach') }}</option>
+          </select>
+        </label>
+      </div>
+    }
+
+    <!-- ------------------------------------------------ Tageszeit -->
+    @case ('timeofday') {
+      <div class="segmented wide">
+        @for (tod of TIMES_OF_DAY; track tod.value) {
+          <button type="button" [class.on]="tod.value === data['time_of_day']" (click)="patch.emit({ time_of_day: tod.value })">{{ t(tod.label) }}</button>
+        }
+      </div>
+    }
+
+    <!-- ------------------------------------------------ Homeegramm -->
+    @case ('homeegram') {
+      <div class="field-row">
+        <label class="field">
+          <span>{{ t('Homeegramm') }}</span>
+          <select [value]="data[hgField()] ?? ''" (change)="setHomeegram($any($event.target).value)">
+            <option value="" disabled>{{ t('wählen …') }}</option>
+            @for (h of homeegrams(); track h.id) {
+              <option [value]="h.id" [selected]="h.id === data[hgField()]">{{ h.name }}{{ h.id === homeegramId() ? ' ' + t('(dieses)') : '' }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">
+          <span>{{ kind() === 'actions' ? t('Aktion') : t('Wenn es') }}</span>
+          <select [value]="data['homeegram_event']" (change)="patch.emit({ homeegram_event: num($any($event.target).value) })">
+            @for (e of hgEvents(); track e.value) {
+              <option [value]="e.value" [selected]="e.value === data['homeegram_event']">{{ t(e.label) }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    }
+
+    <!-- ------------------------------------------------ Webhook (eingehend) -->
+    @case ('webhook-in') {
+      <label class="field">
+        <span>{{ t('Name des Webhooks') }}</span>
+        <input type="text" [placeholder]="t('z. B. licht_aus')" [value]="data['event'] ?? ''" (change)="patch.emit({ event: $any($event.target).value.trim() })" spellcheck="false" />
+      </label>
+      @if (webhookUrls(); as u) {
+        <div class="urls">
+          @if (u.local) {
+            <div class="url"><span class="badge">{{ t('Heimnetz') }}</span><code>{{ u.local }}</code><button type="button" class="ghost icon small" (click)="copy(u.local)" [attr.aria-label]="t('Kopieren')"><app-icon name="copy" [size]="14" /></button></div>
+          }
+          @if (u.remote) {
+            <div class="url"><span class="badge accent">{{ t('Internet') }}</span><code>{{ u.remote }}</code><button type="button" class="ghost icon small" (click)="copy(u.remote)" [attr.aria-label]="t('Kopieren')"><app-icon name="copy" [size]="14" /></button></div>
+          }
+          <p class="hint small"><app-icon name="info" [size]="14" /> {{ t('Per GET aufrufen. Funktioniert erst nach dem Speichern. Die URL enthält einen geheimen Schlüssel.') }}</p>
+        </div>
+      }
+    }
+
+    <!-- ------------------------------------------------ Webhook (ausgehend) -->
+    @case ('webhook-out') {
+      <div class="field-row">
+        <label class="field method">
+          <span>{{ t('Methode') }}</span>
+          <select [value]="data['method'] || 'GET'" (change)="patch.emit({ method: $any($event.target).value })">
+            @for (m of ['GET', 'POST', 'PUT', 'DELETE']; track m) {
+              <option [value]="m" [selected]="m === (data['method'] || 'GET')">{{ m }}</option>
+            }
+          </select>
+        </label>
+        <label class="field wide">
+          <span>URL</span>
+          <input type="url" placeholder="https://…" [value]="data['url'] ?? ''" (change)="patch.emit({ url: $any($event.target).value.trim() })" spellcheck="false" />
+        </label>
+      </div>
+      @if (data['method'] === 'POST' || data['method'] === 'PUT') {
+        <div class="field-row">
+          <label class="field">
+            <span>Content-Type</span>
+            <input type="text" placeholder="application/json" [value]="data['content_type'] ?? ''" (change)="patch.emit({ content_type: $any($event.target).value })" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Body</span>
+          <textarea rows="3" [value]="data['body'] ?? ''" (change)="patch.emit({ body: $any($event.target).value })"></textarea>
+        </label>
+      }
+    }
+
+    <!-- ------------------------------------------------ Benachrichtigung -->
+    @case ('notification') {
+      <label class="field">
+        <span>{{ t('Nachricht') }}</span>
+        <input type="text" [placeholder]="t('z. B. Haustür wurde geöffnet')" [value]="data['message'] ?? ''" (change)="patch.emit({ message: $any($event.target).value })" />
+      </label>
+      <label class="check">
+        <input type="checkbox" [checked]="!!data['critical']" (change)="patch.emit({ critical: $any($event.target).checked })" />
+        {{ t('Kritisch (durchbricht „Nicht stören“)') }}
+      </label>
+    }
+
+    <!-- ------------------------------------------------ Roh -->
+    @default {
+      <p class="hint small"><app-icon name="code" [size]="14" /> {{ t('Für diese Art gibt es kein Formular – Felder als JSON bearbeiten.') }}</p>
+      <textarea #raw rows="6" [value]="rawText()" spellcheck="false"></textarea>
+      <div><button type="button" class="secondary small" (click)="applyRaw(raw.value)">{{ t('Übernehmen') }}</button></div>
+    }
+  }
+
+  <!-- ------------------------------------------------ Gemeinsame Felder -->
+  @if (kind() === 'conditions' && def()?.editor !== 'raw') {
+    <label class="field inline">
+      <span>{{ t('Prüfen') }}</span>
+      <select [value]="data['check_moment'] ?? 1" (change)="patch.emit({ check_moment: num($any($event.target).value) })">
+        @for (c of CHECK_MOMENTS; track c.value) {
+          <option [value]="c.value" [selected]="c.value === (data['check_moment'] ?? 1)">{{ t(c.label) }}</option>
+        }
+      </select>
+    </label>
+  }
+  @if (kind() === 'actions' && def()?.editor !== 'raw') {
+    <label class="field inline">
+      <span>{{ t('Verzögerung') }}</span>
+      <div class="input-unit delay">
+        <input type="number" min="0" [value]="delayShown()" (change)="setDelay($any($event.target).value)" />
+        <select [value]="delayUnit()" (change)="switchDelayUnit($any($event.target).value)">
+          <option value="s" [selected]="delayUnit() === 's'">{{ t('Sekunden') }}</option>
+          <option value="min" [selected]="delayUnit() === 'min'">{{ t('Minuten') }}</option>
+        </select>
+      </div>
+    </label>
+  }
+</fieldset>

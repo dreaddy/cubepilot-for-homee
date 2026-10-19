@@ -1,0 +1,130 @@
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  color: var(--text-muted);
+
+  app-icon {
+    margin-top: 2px;
+  }
+}
+
+.segmented.wide {
+  align-self: flex-start;
+}
+
+.days {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.day {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+
+  &:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  &.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+
+    &:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+  }
+}
+
+.field-row .field.wide {
+  flex: 3 1 260px;
+}
+
+.field-row .field.method {
+  flex: 0 0 120px;
+}
+
+.field.op {
+  max-width: 320px;
+}
+
+.field.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+
+  > span {
+    min-width: 90px;
+  }
+
+  select {
+    max-width: 320px;
+  }
+}
+
+.delay {
+  input {
+    width: 90px;
+  }
+
+  select {
+    width: auto;
+  }
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.urls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.url {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 6px 6px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  code {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+input[type="time"],
+input[type="date"] {
+  max-width: 200px;
+}

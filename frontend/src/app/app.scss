@@ -1,0 +1,255 @@
+:host {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 232px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px 14px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px;
+
+  strong { display: block; }
+
+  .tagline {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-bottom: 5px;
+  }
+
+  .logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+}
+
+.conn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--danger);
+  }
+
+  &.on .dot {
+    background: var(--ok);
+    box-shadow: 0 0 0 3px var(--ok-soft);
+  }
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-weight: 550;
+    text-decoration: none;
+
+    &:hover {
+      background: var(--hover);
+      color: var(--text);
+    }
+
+    &.active {
+      background: var(--accent-soft);
+      color: var(--accent-text);
+    }
+  }
+}
+
+.foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0 6px;
+}
+
+.setup-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  text-decoration: none;
+
+  &:hover,
+  &.active {
+    color: var(--text-muted);
+  }
+}
+
+.lang button {
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 32px 120px;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 32px;
+  font-size: 0.92rem;
+
+  &.error {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  &.warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+}
+
+.toasts {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+  max-width: min(420px, calc(100vw - 32px));
+}
+
+.toast {
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: var(--shadow-lg);
+  font-weight: 500;
+
+  &:hover:not(:disabled) {
+    background: var(--text);
+  }
+
+  app-icon {
+    color: var(--ok);
+  }
+
+  &.error {
+    background: var(--danger);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: var(--danger);
+    }
+
+    app-icon {
+      color: #fff;
+    }
+  }
+}
+
+/* Handy: Navigation unten */
+@media (max-width: 760px) {
+  :host {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+    width: auto;
+    z-index: 50;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    border-right: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .brand,
+  .foot > :not(.lang) {
+    display: none;
+  }
+
+  /* Sprachwahl bleibt erreichbar: oben rechts */
+  .foot {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top));
+    right: 12px;
+    margin: 0;
+    padding: 0;
+  }
+
+  nav {
+    flex-direction: row;
+    justify-content: space-around;
+
+    a {
+      flex-direction: column;
+      gap: 2px;
+      height: auto;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+    }
+  }
+
+  main {
+    padding: 18px 16px 110px;
+  }
+
+  .banner {
+    padding: 10px 16px;
+  }
+
+  .toasts {
+    bottom: 84px;
+    right: 16px;
+  }
+}

@@ -1,0 +1,57 @@
+<div class="page-head">
+  <h1>{{ t('Homeegramme') }}</h1>
+  <a class="btn" routerLink="/homeegramme/neu" [class.disabled]="live.readOnly()"><app-icon name="plus" [size]="16" /> {{ t('Neues Homeegramm') }}</a>
+</div>
+
+<div class="toolbar">
+  <label class="search">
+    <app-icon name="search" [size]="16" />
+    <input type="search" [placeholder]="t('Name, Gerät oder Zeit suchen …')" [value]="search()" (input)="search.set($any($event.target).value)" />
+  </label>
+  <div class="segmented">
+    <button type="button" [class.on]="filter() === 'all'" (click)="filter.set('all')">{{ t('Alle') }} {{ counts().all }}</button>
+    <button type="button" [class.on]="filter() === 'active'" (click)="filter.set('active')">{{ t('Aktiv') }} {{ counts().active }}</button>
+    <button type="button" [class.on]="filter() === 'inactive'" (click)="filter.set('inactive')">{{ t('Inaktiv') }} {{ counts().inactive }}</button>
+  </div>
+  <select [value]="sort()" (change)="sort.set($any($event.target).value)" [attr.aria-label]="t('Sortierung')">
+    <option value="name">{{ t('Name A–Z') }}</option>
+    <option value="recent">{{ t('Zuletzt ausgeführt') }}</option>
+  </select>
+</div>
+
+<div class="list card">
+  @for (r of rows(); track r.hg.id) {
+    <a class="row" [routerLink]="['/homeegramme', r.hg.id]" [class.inactive]="!r.hg.active">
+      <input class="switch" type="checkbox" [checked]="r.hg.active" [disabled]="live.readOnly()" (click)="$event.stopPropagation()" (change)="toggle(r.hg, $any($event.target).checked, $event)" [attr.aria-label]="r.hg.active ? t('Deaktivieren') : t('Aktivieren')" />
+
+      <div class="main">
+        <div class="name">{{ r.hg.name }}</div>
+        <div class="flow">
+          @for (tr of r.triggers; track $index) {
+            <span class="pill trigger"><app-icon [name]="tr.icon" [size]="13" />{{ tr.text }}</span>
+          } @empty {
+            <span class="pill trigger"><app-icon name="hand" [size]="13" />{{ t('nur manuell') }}</span>
+          }
+          @if (r.conditionCount) {
+            <span class="pill condition">+ {{ r.conditionCount === 1 ? t('1 Bedingung') : t('{n} Bedingungen', { n: r.conditionCount }) }}</span>
+          }
+          <app-icon class="arrow" name="chevron-right" [size]="14" />
+          @if (r.actions.length) {
+            <span class="pill action"><app-icon [name]="r.actions[0].icon" [size]="13" />{{ r.actions[0].text }}</span>
+            @if (r.actions.length > 1) {
+              <span class="pill action more">+{{ r.actions.length - 1 }}</span>
+            }
+          } @else {
+            <span class="pill empty">{{ t('keine Aktion') }}</span>
+          }
+        </div>
+      </div>
+
+      <span class="last faint small" [title]="r.hg.lastTriggered ?? ''">{{ relativeTime(r.hg.lastTriggered) }}</span>
+      <span class="btn ghost icon" [title]="t('Bearbeiten')" aria-hidden="true"><app-icon name="pencil" [size]="16" /></span>
+      <button type="button" class="ghost icon" (click)="play(r.hg, $event)" [disabled]="live.readOnly()" [title]="t('Jetzt ausführen')" [attr.aria-label]="t('Jetzt ausführen')"><app-icon name="play" [size]="16" /></button>
+    </a>
+  } @empty {
+    <div class="empty">{{ live.loaded() ? t('Keine Homeegramme gefunden.') : t('Lade Homeegramme …') }}</div>
+  }
+</div>

@@ -1,0 +1,19 @@
+{
+  "name": "@cubepilot/remote",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Eingeschränkter Fernzugang (z. B. für ChatGPT-Actions) – nur Rollläden und Heizung",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@cubepilot/client": "*",
+    "fastify": "^5.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0"
+  }
+}

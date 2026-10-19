@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "start",
+      "detail": "Backend (5311) und Frontend (5310) gemeinsam starten",
+      "type": "npm",
+      "script": "start",
+      "isBackground": true,
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": {
+        "owner": "cubepilot-for-homee",
+        "pattern": { "regexp": "^__never_matches__$" },
+        "background": {
+          "activesBegin": ".",
+          "beginsPattern": "Building|Starting",
+          "endsPattern": "Local:|Application bundle generation complete"
+        }
+      }
+    },
+    {
+      "label": "frontend",
+      "type": "npm",
+      "script": "frontend",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "cubepilot-for-homee-frontend",
+        "pattern": { "regexp": "^__never_matches__$" },
+        "background": {
+          "activesBegin": ".",
+          "beginsPattern": "Building",
+          "endsPattern": "Local:|Application bundle generation complete"
+        }
+      }
+    },
+    {
+      "label": "probe",
+      "detail": "Verbindung zu homee testen",
+      "type": "npm",
+      "script": "probe",
+      "problemMatcher": []
+    },
+    {
+      "label": "typecheck",
+      "type": "npm",
+      "script": "typecheck",
+      "problemMatcher": ["$tsc"]
+    }
+  ]
+}

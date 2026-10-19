@@ -1,0 +1,84 @@
+<a routerLink="/sicherungen" class="back"><app-icon name="chevron-left" [size]="16" /> {{ t('Sicherungen') }}</a>
+
+@if (error(); as e) {
+  <div class="card error-box"><app-icon name="alert" /> {{ e }}</div>
+}
+
+@if (data(); as d) {
+  <div class="page-head">
+    <h1>{{ title() }}</h1>
+  </div>
+  <p class="muted sub">
+    {{ d.reason }} ·
+    <span class="badge danger">{{ counts().deleted }} {{ t('gelöscht') }}</span>
+    <span class="badge warn">{{ counts().changed }} {{ t('geändert') }}</span>
+    <span class="badge accent">{{ counts().new }} {{ t('neu seit Sicherung') }}</span>
+    <span class="badge">{{ counts().unchanged }} {{ t('unverändert') }}</span>
+  </p>
+
+  <div class="toolbar">
+    <div class="segmented">
+      <button type="button" [class.on]="filter() === 'diff'" (click)="filter.set('diff')">{{ t('Nur Unterschiede') }}</button>
+      <button type="button" [class.on]="filter() === 'all'" (click)="filter.set('all')">{{ t('Alle') }}</button>
+    </div>
+    <span class="grow"></span>
+    @if (restorable().length) {
+      <button type="button" class="ghost small" (click)="toggleAll()">{{ t('Alle auswählen') }}</button>
+      <button type="button" (click)="restore([...selected()])" [disabled]="!selected().size || busy() || live.readOnly()">
+        <app-icon name="undo" [size]="15" /> {{ t('Ausgewählte wiederherstellen') }} ({{ selected().size }})
+      </button>
+    }
+  </div>
+
+  <div class="card list">
+    @for (h of rows(); track h.id + '-' + h.status) {
+      <div class="row" [attr.data-status]="h.status">
+        <div class="head">
+          @if (canRestore(h)) {
+            <input type="checkbox" [checked]="selected().has(h.id)" (change)="toggle(h)" [attr.aria-label]="t('Auswählen')" />
+          } @else {
+            <span class="cb-space"></span>
+          }
+          <button type="button" class="title" (click)="open.set(open() === h.id ? null : h.id)">
+            <strong>{{ h.name }}</strong>
+            <span class="faint small">
+              {{ statusLabel(h.status) }}
+              @if (h.status === 'changed') { · {{ t('{n} Unterschied(e)', { n: h.changes }) }} }
+            </span>
+          </button>
+          <span class="badge" [class.danger]="h.status === 'deleted'" [class.warn]="h.status === 'changed'" [class.accent]="h.status === 'new'">{{ statusLabel(h.status) }}</span>
+          @if (canRestore(h)) {
+            <button type="button" class="secondary small" (click)="restore([h.id])" [disabled]="busy() || live.readOnly()"><app-icon name="undo" [size]="14" /> {{ t('Wiederherstellen') }}</button>
+          }
+          <app-icon class="chev" [class.open]="open() === h.id" name="chevron-down" [size]="16" />
+        </div>
+        @if (open() === h.id) {
+          <div class="compare">
+            <div>
+              <div class="label">{{ t('Stand der Sicherung') }}</div>
+              @if (h.backup; as b) {
+                <p>{{ summary(b) }}</p>
+                <span class="faint small">{{ b.active ? t('aktiv') : t('inaktiv') }}</span>
+              } @else {
+                <p class="faint">{{ t('Gab es zum Zeitpunkt der Sicherung noch nicht – wird beim Wiederherstellen nicht verändert.') }}</p>
+              }
+            </div>
+            <div>
+              <div class="label">{{ t('Aktuell') }}</div>
+              @if (h.current; as c) {
+                <p>{{ summary(c) }}</p>
+                <span class="faint small">{{ c.active ? t('aktiv') : t('inaktiv') }} · <a [routerLink]="['/homeegramme', h.currentId]">{{ t('öffnen') }}</a></span>
+              } @else {
+                <p class="faint">{{ t('Gelöscht – wird beim Wiederherstellen neu angelegt.') }}</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="empty">{{ t('Keine Unterschiede – alle Homeegramme entsprechen der Sicherung.') }}</div>
+    }
+  </div>
+} @else if (!error()) {
+  <div class="empty">{{ t('Lade …') }}</div>
+}

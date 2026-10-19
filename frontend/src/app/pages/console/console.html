@@ -1,0 +1,21 @@
+<div class="page-head"><h1>{{ t('Konsole') }}</h1></div>
+<p class="muted small">
+  {{ t('Rohbefehle an die homee-WebSocket-API, z. B. zum Erkunden undokumentierter Befehle. Angezeigt wird alles, was homee in den nächsten Sekunden schickt (also auch nicht zugehörige Live-Ereignisse). Schreibende Befehle werden protokolliert und vorher gesichert.') }}
+</p>
+
+<div class="row">
+  <input [value]="command()" (input)="command.set($any($event.target).value)" (keydown.enter)="send()" spellcheck="false" />
+  <button type="button" (click)="send()" [disabled]="busy()">{{ busy() ? t('Warte …') : t('Senden') }}</button>
+</div>
+<div class="row">
+  @for (e of examples; track e) {
+    <button class="ghost small" type="button" (click)="command.set(e)">{{ e }}</button>
+  }
+</div>
+
+@for (r of results(); track $index) {
+  <div class="entry">
+    <code>{{ r.command }}</code> <span class="muted small">{{ t('{n} Nachricht(en)', { n: r.received.length }) }}</span>
+    <pre>{{ r.received | json }}</pre>
+  </div>
+}

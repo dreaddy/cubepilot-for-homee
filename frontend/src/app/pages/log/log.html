@@ -1,0 +1,61 @@
+<div class="page-head">
+  <h1>{{ t('Verlauf') }}</h1>
+  <button class="ghost small" type="button" (click)="load()"><app-icon name="refresh" [size]="15" /> {{ t('Aktualisieren') }}</button>
+</div>
+
+<div class="layout">
+  <section>
+    <div class="section-head">
+      <h2>{{ t('Änderungen') }}</h2>
+      <div class="segmented">
+        <button type="button" [class.on]="source() === 'all'" (click)="source.set('all')">{{ t('Alle') }}</button>
+        <button type="button" [class.on]="source() === 'frontend'" (click)="source.set('frontend')">{{ t('Oberfläche') }}</button>
+        <button type="button" [class.on]="source() === 'mcp'" (click)="source.set('mcp')">{{ t('KI') }}</button>
+      </div>
+    </div>
+    <div class="card list">
+      @for (e of entries(); track $index; let i = $index) {
+        @let s = subject(e);
+        <div class="entry" [class.failed]="!e.ok">
+          <span class="icon"><app-icon [name]="e.ok ? action(e).icon : 'alert'" [size]="16" /></span>
+          <div class="main">
+            <div class="line">
+              <strong>{{ t(action(e).label) }}</strong>
+              @if (s.text) {
+                @if (s.link) {
+                  <a [routerLink]="s.link">{{ s.text }}</a>
+                } @else {
+                  <span class="muted">{{ s.text }}</span>
+                }
+              }
+            </div>
+            @if (!e.ok) {
+              <div class="error small">{{ e.error }}</div>
+            }
+            <div class="sub faint small">
+              <span class="badge" [class.accent]="e.source === 'mcp'">{{ sourceLabel(e.source) }}</span>
+              <span [title]="e.at | date: 'short'">{{ relativeTime(e.at) }}</span>
+              <button type="button" class="ghost small" (click)="open.set(open() === i ? null : i)">{{ t('Details') }}</button>
+            </div>
+            @if (open() === i) {
+              <pre>{{ e.details | json }}</pre>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="empty">{{ t('Noch keine Änderungen.') }}</div>
+      }
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>{{ t('Sicherungen') }}</h2>
+    </div>
+    <a class="card backups-link" routerLink="/sicherungen">
+      <app-icon name="save" [size]="18" />
+      <span>{{ t('Sicherungen ansehen, vergleichen und Homeegramme wiederherstellen') }}</span>
+      <app-icon name="chevron-right" [size]="16" />
+    </a>
+  </section>
+</div>

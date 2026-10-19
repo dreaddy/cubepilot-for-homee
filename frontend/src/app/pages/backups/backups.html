@@ -1,0 +1,30 @@
+<div class="page-head">
+  <h1>{{ t('Sicherungen') }}</h1>
+  <label class="btn secondary">
+    <app-icon name="arrow-up" [size]="15" /> {{ t('Hochladen') }}
+    <input #file type="file" accept="application/json,.json" hidden (change)="upload(file)" />
+  </label>
+  <button type="button" (click)="create()" [disabled]="busy()"><app-icon name="save" [size]="15" /> {{ t('Jetzt sichern') }}</button>
+</div>
+
+<p class="muted intro">
+  {{ t('Eine Sicherung enthält alle Homeegramme, Geräte und Gruppen. Vor jeder Änderung an Homeegrammen wird automatisch gesichert. Öffne eine Sicherung, um sie mit dem aktuellen Stand zu vergleichen und einzelne Homeegramme wiederherzustellen.') }}
+</p>
+
+<div class="card list">
+  @for (b of backups() ?? []; track b.file) {
+    <a class="row" [routerLink]="['/sicherungen', b.file.replace('.json', '')]">
+      <span class="icon"><app-icon [name]="b.reason.startsWith('auto-') ? 'history' : b.reason.startsWith('import') ? 'arrow-up' : 'save'" [size]="16" /></span>
+      <span class="main">
+        <strong>{{ date(b.createdAt) }}</strong>
+        <span class="faint small">{{ reason(b.reason) }} · {{ relativeTime(b.createdAt) }} · {{ (b.size / 1024).toFixed(0) }} KB</span>
+      </span>
+      <button class="ghost icon small" type="button" (click)="$event.preventDefault(); $event.stopPropagation(); download(b)" [title]="t('Herunterladen')" [attr.aria-label]="t('Herunterladen')">
+        <app-icon name="arrow-down" [size]="16" />
+      </button>
+      <app-icon class="chev" name="chevron-right" [size]="16" />
+    </a>
+  } @empty {
+    <div class="empty">{{ backups() === null ? t('Lade …') : t('Noch keine Sicherungen.') }}</div>
+  }
+</div>
