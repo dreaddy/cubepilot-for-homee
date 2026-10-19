@@ -262,7 +262,12 @@ npm audit --prefix frontend
 
 ## Danksagung
 
-Die Enum-Tabellen stammen aus [homee-api](https://github.com/stfnhmplr/homee-api) von stfnhmplr (MIT).
+Die Zahlencodes der homee-Schnittstelle (Enum-Tabellen) stammen aus der offiziellen homee-Web-App unter
+[my.hom.ee](https://my.hom.ee/), die sie in ihrem JavaScript mitliefert. Nach einem homee-Update lassen sie sich mit
+`npm run update-enums` aktualisieren: Das Skript lädt die Web-App, liest das Objekt `ENUMS` als reine Daten (es wird
+nichts ausgeführt) und erzeugt `packages/homee-client/src/enums.ts` neu. Danke an Micha für den Hinweis.
+
+Die erste Fassung der Tabellen stammte aus [homee-api](https://github.com/stfnhmplr/homee-api) von stfnhmplr (MIT).
 Der Lizenzhinweis steht in [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES).
 
 ## Lizenz

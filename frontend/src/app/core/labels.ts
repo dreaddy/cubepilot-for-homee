@@ -60,6 +60,20 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
   MotorBlockedAlarm: 'Motor blockiert',
   MalfunctionAlarm: 'Störung',
   PowerSupplyAlarm: 'Stromversorgung',
+  FlowAlarm: 'Durchflussalarm',
+  Text: 'Text',
+  TotalConsumptionNow: 'Aktueller Gesamtverbrauch',
+  ConsumptionLimitPeak: 'Verbrauchslimit (Spitze)',
+  ConsumptionLimitDaily: 'Verbrauchslimit (Tag)',
+  DailyConsumptionAccumulated: 'Verbrauch heute',
+  EnergyManagerSwitchRule: 'Energiemanager-Regel',
+  CurrentMarketPrice: 'Aktueller Strompreis',
+  ConnectedDevices: 'Verbundene Geräte',
+  EnergyManagerRuleActive: 'Energiemanager-Regel aktiv',
+  EnergyManagerRuleOnThreshold: 'Einschaltschwelle',
+  EnergyManagerRuleOffThreshold: 'Ausschaltschwelle',
+  EnergyManagerRuleLockTime: 'Sperrzeit',
+  EnergyManagerRuleDevices: 'Geräte der Regel',
 };
 
 const VALUE_LABELS: Record<string, Record<number, string>> = {
@@ -86,6 +100,8 @@ const VALUE_LABELS: Record<string, Record<number, string>> = {
   MalfunctionAlarm: { 0: 'Nein', 1: 'Ja' },
   PowerSupplyAlarm: { 0: 'OK', 1: 'Störung' },
   ManualOperation: { 0: 'Nein', 1: 'Ja' },
+  FlowAlarm: { 0: 'Kein Alarm', 1: 'Alarm' },
+  EnergyManagerRuleActive: { 0: 'Aus', 1: 'An' },
   AutomaticMode: { 0: 'Aus', 1: 'An' },
 };
 
@@ -122,6 +138,8 @@ export const TECHNICAL = new Set([
   'TemperatureReportInterval',
   'PresenceAlarmCancelationDelay',
   'HighTemperatureAlarmTreshold',
+  'MeshPartners',
+  'IometerStreamingMode',
 ]);
 
 function splitCamel(s: string): string {

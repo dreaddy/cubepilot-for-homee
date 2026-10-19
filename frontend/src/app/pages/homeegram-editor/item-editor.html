@@ -159,6 +159,16 @@
           <span>{{ kind() === 'actions' ? t('Setzen auf') : t('Wert') }}</span>
           <app-value-input [meta]="groupMeta()" [value]="data['value']" (valueChange)="patch.emit({ value: $event })" />
         </div>
+        @if (kind() === 'conditions') {
+          <label class="field op">
+            <span>{{ t('Gilt für') }}</span>
+            <select [value]="data['scope'] ?? 3" (change)="patch.emit({ scope: num($any($event.target).value) })">
+              @for (s of GROUP_SCOPES; track s.value) {
+                <option [value]="s.value" [selected]="s.value === (data['scope'] ?? 3)">{{ t(s.label) }}</option>
+              }
+            </select>
+          </label>
+        }
       }
     }
 

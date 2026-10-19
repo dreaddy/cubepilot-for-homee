@@ -172,7 +172,9 @@ class Lookup {
 }
 
 const triggerOps: Record<number, string> = { 1: 'steigt über', 2: 'fällt unter', 3: 'wird gleich', 4: 'ändert sich um mehr als' };
-const conditionOps: Record<number, string> = { 1: '=', 2: '≤', 3: '≥', 4: '<', 5: '>', 6: '≠' };
+const conditionOps: Record<number, string> = { 1: '=', 2: '≤', 3: '≥', 4: '<', 5: '>', 6: '≠', 7: '= (Text)', 8: '≠ (Text)' };
+/** CAGroupScope: für welche Geräte der Gruppe die Bedingung gelten muss */
+const groupScopes: Record<number, string> = { 1: 'kein Gerät', 2: 'alle Geräte', 3: 'mindestens ein Gerät', 4: 'nicht alle Geräte' };
 const hgEvents: Record<number, string> = { 1: 'aktiviert', 2: 'deaktiviert', 3: 'abgespielt', 4: 'gestoppt' };
 const hgActionEvents: Record<number, string> = { 1: 'aktivieren', 2: 'deaktivieren', 3: 'abspielen', 4: 'stoppen' };
 const checkMoments: Record<number, string> = { 1: 'beim Start', 2: 'am Ende', 3: 'bei Start und Ende' };
@@ -292,7 +294,7 @@ function describeItem(kind: ItemKind, group: string, i: HomeegramItem, l: Lookup
       case 'celestial_conditions':
         return `Tageszeit: ${enumName('CATimeOfDay', i.time_of_day)}${when}`;
       case 'group_conditions':
-        return `${l.group(i.group_id)}: ${enumName('CAAttributeType', i.attribute_type)} ${conditionOps[Number(i.operator)] ?? `op${i.operator}`} ${i.value}${when}`;
+        return `${l.group(i.group_id)}: ${enumName('CAAttributeType', i.attribute_type)} ${conditionOps[Number(i.operator)] ?? `op${i.operator}`} ${i.value}${i.scope != null ? ` (${groupScopes[Number(i.scope)] ?? `scope ${i.scope}`})` : ''}${when}`;
       case 'user_conditions':
         return `${l.user(i.user_id)} Wert ${i.value}${when}`;
     }

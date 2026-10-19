@@ -98,6 +98,20 @@ export const CONDITION_OPERATORS = [
   { value: 2, label: 'ist höchstens', short: '≤' },
 ];
 
+/** Text-Vergleiche (homee ≥ 2.41) – nur zur Anzeige, der Editor bietet sie (noch) nicht an. */
+export const TEXT_CONDITION_OPERATORS = [
+  { value: 7, label: 'ist (Text) gleich' },
+  { value: 8, label: 'ist (Text) ungleich' },
+];
+
+/** Für welche Geräte einer Gruppe eine Gruppen-Bedingung gelten muss (CAGroupScope). */
+export const GROUP_SCOPES = [
+  { value: 3, label: 'mindestens ein Gerät' },
+  { value: 2, label: 'alle Geräte' },
+  { value: 4, label: 'nicht alle Geräte' },
+  { value: 1, label: 'kein Gerät' },
+];
+
 export const CHECK_MOMENTS = [
   { value: 1, label: 'beim Start' },
   { value: 2, label: 'am Ende (vor verzögerten Aktionen)' },
@@ -289,7 +303,7 @@ function comparison(kind: 'trigger' | 'condition', operator: unknown, valueText:
   if (labelled && kind === 'trigger' && op === 3) return `: ${valueText}`;
   if (labelled && kind === 'condition' && op === 1) return ' ' + t('ist {v}', { v: valueText });
   if (labelled && kind === 'condition' && op === 6) return ' ' + t('ist nicht {v}', { v: valueText });
-  return ` ${label(kind === 'trigger' ? TRIGGER_OPERATORS : CONDITION_OPERATORS, operator)} ${valueText}`;
+  return ` ${label(kind === 'trigger' ? TRIGGER_OPERATORS : [...CONDITION_OPERATORS, ...TEXT_CONDITION_OPERATORS], operator)} ${valueText}`;
 }
 
 function hasLabel(sample: { typeName: string } | undefined, value: unknown): boolean {
@@ -342,7 +356,8 @@ export function describeItem(item: DraftItem, ctx: ModelContext): string {
       const head = `${t('Gruppe')} ${q(g.name)} · ${gt ? typeLabel(gt.typeName) : t('Typ {n}', { n: d['attribute_type'] })}`;
       const val = groupValueText(ctx, d['group_id'], d['attribute_type'], d['value']);
       if (item.group === 'group_actions') return `${head} → ${val}${delayText(d)}`;
-      return `${head}${comparison(item.group === 'group_triggers' ? 'trigger' : 'condition', d['operator'], val, hasLabel(gt?.sample, d['value']))}`;
+      const scope = item.group === 'group_conditions' && d['scope'] != null ? ` (${label(GROUP_SCOPES, d['scope'])})` : '';
+      return `${head}${comparison(item.group === 'group_triggers' ? 'trigger' : 'condition', d['operator'], val, hasLabel(gt?.sample, d['value']))}${scope}`;
     }
     case 'celestial_triggers': {
       const off = Number(d['time_offset'] ?? 0);

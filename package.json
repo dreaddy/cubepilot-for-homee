@@ -25,7 +25,8 @@
     "serve": "npm run build && npm start -w backend",
     "typecheck": "tsc -p packages/homee-client && tsc -p backend && tsc -p mcp && tsc -p remote",
     "test": "node --import tsx --test tests/*.test.ts",
-    "stop": "node scripts/stop-backend.mjs"
+    "stop": "node scripts/stop-backend.mjs",
+    "update-enums": "node scripts/update-enums.mjs"
   },
   "engines": {
     "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
